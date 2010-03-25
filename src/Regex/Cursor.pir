@@ -59,7 +59,6 @@ for the Cursor if one hasn't been created yet.
     positional_caps = new ['ResizablePMCArray']
 #
 #    # First, create a Match object and bind it
-#    match = new ['Regex';'Match']
 #
 #    setattribute self, '$!match', match
 #    setattribute match, '$!cursor', self
@@ -151,10 +150,7 @@ for the Cursor if one hasn't been created yet.
   match_nearly_done:
     # this is an ugly hack: we should have one object lying around somewhere
     # and act as a "factory" to call the .new method on
-    match = new ['Regex';'Match']
-
-
-
+    match = get_hll_global ['Regex'], 'Match'
     match = match.'new'('cursor' => self, 'orig' => target, 'from' => from, 'to' => to, 'named_caps' => named_caps, 'pos_caps' => positional_caps)
     setattribute self, '$!match', match
 

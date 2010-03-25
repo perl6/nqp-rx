@@ -32,11 +32,11 @@ Constructs a new Regex::Match object
 =cut
 
 .sub 'new' :method
-    .param pmc orig      :named( 'orig'     )
-    .param pmc cursor    :named( 'cursor'   )
-    .param pmc from      :named( 'from'     )
-    .param pmc to        :named( 'to'       )
-    .param pmc pos_caps  :named( 'pos_caps' )
+    .param pmc orig        :named( 'orig'       )
+    .param pmc cursor      :named( 'cursor'     )
+    .param pmc from        :named( 'from'       )
+    .param pmc to          :named( 'to'         )
+    .param pmc pos_caps    :named( 'pos_caps'   )
     .param pmc named_caps  :named( 'named_caps' )
 
     .local pmc mob
@@ -44,7 +44,11 @@ Constructs a new Regex::Match object
     .local pmc sub_capture
     .local string cap_key
 
-    mob = new ['Regex';'Match']
+    .local pmc parrotclass
+    $P0 = self.'HOW'()
+    parrotclass = getattribute $P0, 'parrotclass'
+    mob = new parrotclass
+
 
     setattribute mob, '$!target', orig
     setattribute mob, '$!cursor', cursor
