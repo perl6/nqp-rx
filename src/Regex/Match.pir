@@ -34,10 +34,10 @@ Constructs a new Regex::Match object
 .sub 'new' :method
     .param pmc orig      :named( 'orig'     )
     .param pmc cursor    :named( 'cursor'   )
-    .param pmc ast       :named( 'ast'      )
     .param pmc from      :named( 'from'     )
     .param pmc to        :named( 'to'       )
-    .param pmc captures  :named( 'captures' )
+    .param pmc pos_caps  :named( 'pos_caps' )
+    .param pmc named_caps  :named( 'named_caps' )
 
     .local pmc mob
     .local pmc cap_iter
@@ -50,27 +50,24 @@ Constructs a new Regex::Match object
     setattribute mob, '$!cursor', cursor
     setattribute mob, '$!from',   from
     setattribute mob, '$!to',     to
-    setattribute mob, '$!ast',    ast
 
-    cap_iter = iter captures
-  cap_iter_loop:
-    unless cap_iter goto cap_iter_done
+    cap_iter = iter pos_caps
+  pos_iter_loop:
+    unless cap_iter goto pos_iter_done
+    $P0 = shift cap_iter
+    push mob, $P0
+    goto pos_iter_loop
+  pos_iter_done:
 
-    cap_key     = shift cap_iter
-    sub_capture = shift cap_iter
+    cap_iter = iter named_caps
+  named_iter_loop:
+    unless cap_iter goto named_iter_done
+    $S0 = shift cap_iter
+    $P0 = named_caps[$S0]
+    mob[$S0] = $P0
+    goto named_iter_loop
+  named_iter_done:
 
-    $I0 = is_cclass .CCLASS_NUMERIC, cap_key, 0
-    if $I0 goto positional_capture
-    $S0 = cap_key
-    mob[$S0] = sub_capture
-    goto cap_iter_loop
-
-  positional_capture:
-    $I0 = cap_key
-    mob[$I0] = sub_capture
-    goto cap_iter_loop
-
-  cap_iter_done:
     .return(mob)
 .end
 

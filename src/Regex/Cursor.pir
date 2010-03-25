@@ -52,19 +52,21 @@ for the Cursor if one hasn't been created yet.
     $P0 = get_global '$!TRUE'
     $I0 = issame match, $P0
     unless $I0 goto match_done
-
-    # First, create a Match object and bind it
   match_make:
-    match = new ['Regex';'Match']
-    setattribute self, '$!match', match
-    setattribute match, '$!cursor', self
+
+    .local pmc named_caps, positional_caps
+    named_caps      = new ['Hash']
+    positional_caps = new ['ResizablePMCArray']
+#
+#    # First, create a Match object and bind it
+#    match = new ['Regex';'Match']
+#
+#    setattribute self, '$!match', match
+#    setattribute match, '$!cursor', self
     .local pmc target, from, to
     target = getattribute self, '$!target'
-    setattribute match, '$!target', target
     from = getattribute self, '$!from'
-    setattribute match, '$!from', from
     to = getattribute self, '$!pos'
-    setattribute match, '$!to', to
 
     # Create any arrayed subcaptures.
     .local pmc caparray, caparray_it, caphash
@@ -82,16 +84,16 @@ for the Cursor if one hasn't been created yet.
     caphash[subname] = arr
     keyint = is_cclass .CCLASS_NUMERIC, subname, 0
     if keyint goto caparray_int
-    match[subname] = arr
+    named_caps[subname] = arr
     goto caparray_loop
   caparray_int:
     $I0 = subname
-    match[$I0] = arr
+    positional_caps[$I0] = arr
   caparray_done:
 
     # If it's not a successful match, or if there are
-    # no saved subcursors, we're done.
-    if to < from goto match_done
+    # no saved subcursors, we're nearly done.
+    if to < from goto match_nearly_done
     .local pmc cstack, cstack_it
     cstack = getattribute self, '@!cstack'
     if null cstack goto cstack_done
@@ -126,25 +128,35 @@ for the Cursor if one hasn't been created yet.
     $I0 = exists caphash[subname]
     unless $I0 goto cstack_bind
     if keyint goto cstack_array_int
-    $P0 = match[subname]
+    $P0 = named_caps[subname]
     push $P0, submatch
     goto cstack_bind_done
   cstack_array_int:
     $I0 = subname
-    $P0 = match[$I0]
+    $P0 = positional_caps[$I0]
     push $P0, submatch
     goto cstack_bind_done
   cstack_bind:
     if keyint goto cstack_bind_int
-    match[subname] = submatch
+    named_caps[subname] = submatch
     goto cstack_bind_done
   cstack_bind_int:
     $I0 = subname
-    match[$I0] = submatch
+    positional_caps[$I0] = submatch
   cstack_bind_done:
     if names_it goto cstack_subname_loop
     goto cstack_loop
   cstack_done:
+
+  match_nearly_done:
+    # this is an ugly hack: we should have one object lying around somewhere
+    # and act as a "factory" to call the .new method on
+    match = new ['Regex';'Match']
+
+
+
+    match = match.'new'('cursor' => self, 'orig' => target, 'from' => from, 'to' => to, 'named_caps' => named_caps, 'pos_caps' => positional_caps)
+    setattribute self, '$!match', match
 
   match_done:
     .return (match)
