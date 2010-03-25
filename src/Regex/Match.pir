@@ -25,6 +25,55 @@ This file implements Match objects for the regex engine.
 
 =over 4
 
+=item new
+
+Constructs a new Regex::Match object
+
+=cut
+
+.sub 'new' :method
+    .param pmc orig      :named( 'orig'     )
+    .param pmc cursor    :named( 'cursor'   )
+    .param pmc ast       :named( 'ast'      )
+    .param pmc from      :named( 'from'     )
+    .param pmc to        :named( 'to'       )
+    .param pmc captures  :named( 'captures' )
+
+    .local pmc mob
+    .local pmc cap_iter
+    .local pmc sub_capture
+    .local string cap_key
+
+    mob = new ['Regex';'Match']
+
+    setattribute mob, '$!target', orig
+    setattribute mob, '$!cursor', cursor
+    setattribute mob, '$!from',   from
+    setattribute mob, '$!to',     to
+    setattribute mob, '$!ast',    ast
+
+    cap_iter = iter captures
+  cap_iter_loop:
+    unless cap_iter goto cap_iter_done
+
+    cap_key     = shift cap_iter
+    sub_capture = shift cap_iter
+
+    $I0 = is_cclass .CCLASS_NUMERIC, cap_key, 0
+    if $I0 goto positional_capture
+    $S0 = cap_key
+    mob[$S0] = sub_capture
+    goto cap_iter_loop
+
+  positional_capture:
+    $I0 = cap_key
+    mob[$I0] = sub_capture
+    goto cap_iter_loop
+
+  cap_iter_done:
+    .return(mob)
+.end
+
 =item CURSOR()
 
 Returns the Cursor associated with this match object.
