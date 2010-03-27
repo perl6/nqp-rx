@@ -151,7 +151,7 @@ for the Cursor if one hasn't been created yet.
     # this is an ugly hack: we should have one object lying around somewhere
     # and act as a "factory" to call the .new method on
     match = get_hll_global ['Regex'], 'Match'
-    match = match.'new'('cursor' => self, 'orig' => target, 'from' => from, 'to' => to, 'named_caps' => named_caps, 'pos_caps' => positional_caps)
+    match = match.'create'('cursor' => self, 'orig' => target, 'from' => from, 'to' => to, 'named_caps' => named_caps, 'pos_caps' => positional_caps)
     setattribute self, '$!match', match
 
   match_done:

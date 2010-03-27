@@ -25,13 +25,13 @@ This file implements Match objects for the regex engine.
 
 =over 4
 
-=item new
+=item create
 
 Constructs a new Regex::Match object
 
 =cut
 
-.sub 'new' :method
+.sub 'create' :method
     .param pmc orig        :named( 'orig'       )
     .param pmc cursor      :named( 'cursor'     )
     .param pmc from        :named( 'from'       )
