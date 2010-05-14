@@ -82,6 +82,10 @@ class HLL::Compiler is PCT::HLLCompiler {
         }
     }
 
+    method autoprint($value) {
+        pir::say(~$value);
+    }
+
     method interactive(*%adverbs) {
         my $target := pir::downcase(%adverbs<target>);
 
@@ -116,12 +120,12 @@ class HLL::Compiler is PCT::HLLCompiler {
 
                 for %*REPL_NEXT -> $kv { %adverbs{$kv.key} := $kv.value }
 
-                if $target {
-                    if $target eq 'pir' {
-                        pir::say($output);
-                    } else {
-                        self.dumper($output, $target, |%adverbs);
-                    }
+                if !$target {
+                    self.autoprint($output);
+                } elsif $target eq 'pir' {
+                   pir::say($output);
+                } else {
+                   self.dumper($output, $target, |%adverbs);
                 }
             }
         }
