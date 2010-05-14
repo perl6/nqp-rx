@@ -84,6 +84,7 @@ class HLL::Compiler is PCT::HLLCompiler {
 
     method interactive(*%adverbs) {
         my $target := pir::downcase(%adverbs<target>);
+        my &*REPL_LAST_SUB;
 
         pir::printerr__vS(self.commandline_banner);
 
@@ -104,10 +105,16 @@ class HLL::Compiler is PCT::HLLCompiler {
             if $code {
                 $code := $code ~ "\n";
                 my $output;
+                my $*NEW_OUTER_SYMTABLE;
+                my $*NEW_OUTER_CONTEXT;
                 {
                     $output := self.eval($code, |%adverbs);
+                    %adverbs<outer_ctx> := $*NEW_OUTER_CONTEXT
+                        if pir::defined($*NEW_OUTER_CONTEXT);
+                    %adverbs<outer_symtable> := $*NEW_OUTER_SYMTABLE
+                        if pir::defined($*NEW_OUTER_SYMTABLE);
                     CATCH {
-                        pir::print($! ~ "\n");
+                        pir::print(~$! ~ "\n");
                         next;
                     }
                 };
@@ -124,16 +131,92 @@ class HLL::Compiler is PCT::HLLCompiler {
         }
     }
 
+    # This will be called automatically.  You might want to call it early
+    # if you're introspecting the symbol table, like Rakudo does.
+    method install_outer_lexicals($block, $cb?) {
+        my %adverbs := %*COMPILING<%?OPTIONS>;
+
+        my %symbols :=
+            pir::defined(%adverbs<outer_symtable>) ??
+                %adverbs<outer_symtable> !!
+            pir::defined(%adverbs<outer_ctx>) ??
+                self.reconstruct_symbols(%adverbs<outer_ctx><current_sub>) !!
+            {};
+
+        for %symbols -> $kv {
+            my %v := $kv.value;
+            $block.symbol($kv.key, |%v);
+            $cb($kv) if pir::defined($cb);
+        }
+    }
+
+    # Mark symbols for use; this will be called automatically, but you want to
+    # call it yourself if you want to continue an inner scope.
+    method set_new_symtable($st) {
+        try { $*NEW_OUTER_SYMTABLE := $st };
+    }
+
+    # Mostly important for evals called from compiled code, when the PAST
+    # is long since gone
+    method reconstruct_symbols($outer) {
+        my %tab;
+        my %entry;
+        %entry<scope> := 'lexical';
+
+        while pir::defined($outer) {
+            my $lexinfo := $outer.get_lexinfo;
+
+            for $lexinfo -> $kv {
+                %tab{$kv.key} := %entry;
+            }
+
+            $outer := $outer.get_outer;
+        }
+
+        %tab;
+    }
+
+    method post($past, *%adverbs) {
+        if (!$past.isa(PAST::Block)) {
+            $past := PAST::Block.new(
+                :blocktype('immediate'),
+                $past
+            );
+        }
+
+        try {
+            $*NEW_OUTER_CONTEXT;
+            $past.unshift(PAST::Op.new(
+                    :pasttype('bind'),
+                    PAST::Var.new( :name('$*NEW_OUTER_CONTEXT'),
+                                   :scope('contextual') ),
+                    PAST::Var.new(
+                        :scope('keyed'),
+                        PAST::Op.new( :pasttype('pirop'),
+                                      :pirop('getinterp P') ),
+                        PAST::Val.new( :value('context') ) ) ));
+        }
+
+        self.install_outer_lexicals($past);
+
+        my %symtab := $past.symtable;
+        # note that the grammar actions may already have picked a symtable
+        try { $*NEW_OUTER_SYMTABLE := %symtab
+                  unless pir::defined($*NEW_OUTER_SYMTABLE); };
+
+        my $SUPER := P6metaclass.get_parrotclass(PCT::HLLCompiler);
+        $SUPER.find_method('post')(self, $past, |%adverbs);
+    }
+
     method eval($code, *@args, *%adverbs) {
         my $output; my $outer;
         $output := self.compile($code, |%adverbs);
 
         if !pir::isa($output, 'String')
                 && %adverbs<target> eq '' {
-            $outer := %adverbs<outer_ctx>;
 
-            unless pir::isnull($outer) {
-                $output[0].set_outer($outer<current_sub>);
+            if pir::defined(%adverbs<outer_ctx>) {
+                $output[0].set_outer(%adverbs<outer_ctx>);
             }
 
             pir::trace(%adverbs<trace>);
