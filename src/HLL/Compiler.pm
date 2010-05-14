@@ -118,7 +118,7 @@ class HLL::Compiler is PCT::HLLCompiler {
 
                 if $target {
                     if $target eq 'pir' {
-                        say($output);
+                        pir::say($output);
                     } else {
                         self.dumper($output, $target, |%adverbs);
                     }
@@ -138,6 +138,13 @@ class HLL::Compiler is PCT::HLLCompiler {
             pir::defined(%adverbs<outer_ctx>) ??
                 self.reconstruct_symbols(%adverbs<outer_ctx><current_sub>) !!
             {};
+
+        if pir::defined(%adverbs<outer_ctx>) {
+            my @ns := pir::getattribute__PPs(%adverbs<outer_ctx>,
+                'current_namespace').get_name;
+            @ns.shift;
+            $block.namespace(@ns);
+        }
 
         for %symbols -> $kv {
             my %v := $kv.value;
@@ -193,16 +200,19 @@ class HLL::Compiler is PCT::HLLCompiler {
     }
 
     method wrap_past($past) {
-        if (!$past.isa(PAST::Block)) {
+        my $target := $past;
+        if pir::defined($past<mainline>) {
+            $target := $past<mainline>;
+        } elsif !$past.isa(PAST::Block) {
             $past := PAST::Block.new(
                 :blocktype('immediate'),
                 $past
             );
         }
 
-        self.add_context_extraction_hook($past);
-        self.install_outer_lexicals($past);
-        self.set_new_symtable($past.symtable);
+        self.add_context_extraction_hook($target);
+        self.install_outer_lexicals($target);
+        self.set_new_symtable($target.symtable);
 
         $past;
     }
