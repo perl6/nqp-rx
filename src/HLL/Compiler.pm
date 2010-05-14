@@ -140,7 +140,8 @@ class HLL::Compiler is PCT::HLLCompiler {
             pir::defined(%adverbs<outer_symtable>) ??
                 %adverbs<outer_symtable> !!
             pir::defined(%adverbs<outer_ctx>) ??
-                self.reconstruct_symbols(%adverbs<outer_ctx><current_sub>) !!
+                self.reconstruct_symbols(
+                    pir::getattribute__PPs(%adverbs<outer_ctx>, "current_sub")) !!
             {};
 
         if pir::defined(%adverbs<outer_ctx>) {
