@@ -189,6 +189,7 @@ class HLL::Compiler is PCT::HLLCompiler {
                     PAST::Op.new( :pasttype('pirop'),
                                   :pirop('getinterp P') ),
                     PAST::Val.new( :value('context') ) ) ));
+        $past.unshift(PAST::Block.new());
     }
 
     method wrap_past($past) {
@@ -219,12 +220,16 @@ class HLL::Compiler is PCT::HLLCompiler {
                 && %adverbs<target> eq '' {
 
             if pir::defined(%adverbs<outer_ctx>) {
-                $output[0].set_outer(%adverbs<outer_ctx>);
+                # TODO: We ought to be passing the entire context here,
+                # but this works for now (arguably a Parrot bug).
+                my $sub := pir::getattribute__PPS(%adverbs<outer_ctx>,
+                    "current_sub");
+                $output[0].set_outer($sub);
             }
 
-            pir::trace(%adverbs<trace>);
+            pir::trace(%adverbs<trace>) if %adverbs<trace>;
             $output := $output[0]();
-            pir::trace(0);
+            pir::trace(0) if %adverbs<trace>;
         }
 
         $output;
