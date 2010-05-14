@@ -84,7 +84,6 @@ class HLL::Compiler is PCT::HLLCompiler {
 
     method interactive(*%adverbs) {
         my $target := pir::downcase(%adverbs<target>);
-        my &*REPL_LAST_SUB;
 
         pir::printerr__vS(self.commandline_banner);
 
@@ -105,20 +104,17 @@ class HLL::Compiler is PCT::HLLCompiler {
             if $code {
                 $code := $code ~ "\n";
                 my $output;
-                my $*NEW_OUTER_SYMTABLE;
-                my $*NEW_OUTER_CONTEXT;
+                my %*REPL_NEXT;
                 {
-                    $output := self.eval($code, |%adverbs);
-                    %adverbs<outer_ctx> := $*NEW_OUTER_CONTEXT
-                        if pir::defined($*NEW_OUTER_CONTEXT);
-                    %adverbs<outer_symtable> := $*NEW_OUTER_SYMTABLE
-                        if pir::defined($*NEW_OUTER_SYMTABLE);
+                    $output := self.eval($code, :repl(1), |%adverbs);
                     CATCH {
                         pir::print(~$! ~ "\n");
                         next;
                     }
                 };
                 next if pir::isnull($output);
+
+                for %*REPL_NEXT -> $kv { %adverbs{$kv.key} := $kv.value }
 
                 if $target {
                     if $target eq 'pir' {
@@ -153,7 +149,8 @@ class HLL::Compiler is PCT::HLLCompiler {
     # Mark symbols for use; this will be called automatically, but you want to
     # call it yourself if you want to continue an inner scope.
     method set_new_symtable($st) {
-        try { $*NEW_OUTER_SYMTABLE := $st };
+        %*REPL_NEXT<outer_symtable> := $st
+            if %*COMPILING<%?OPTIONS><repl>;
     }
 
     # Mostly important for evals called from compiled code, when the PAST
@@ -176,7 +173,25 @@ class HLL::Compiler is PCT::HLLCompiler {
         %tab;
     }
 
-    method post($past, *%adverbs) {
+    method add_context_extraction_hook($past) {
+        return 0 unless %*COMPILING<%?OPTIONS><repl>;
+
+        $past.unshift(PAST::Op.new(
+                :pasttype('bind'),
+                PAST::Var.new(
+                    :scope('keyed'),
+                    PAST::Var.new(
+                        :scope('contextual'),
+                        :name('%*REPL_NEXT') ),
+                    "outer_ctx"),
+                PAST::Var.new(
+                    :scope('keyed'),
+                    PAST::Op.new( :pasttype('pirop'),
+                                  :pirop('getinterp P') ),
+                    PAST::Val.new( :value('context') ) ) ));
+    }
+
+    method wrap_past($past) {
         if (!$past.isa(PAST::Block)) {
             $past := PAST::Block.new(
                 :blocktype('immediate'),
@@ -184,28 +199,16 @@ class HLL::Compiler is PCT::HLLCompiler {
             );
         }
 
-        try {
-            $*NEW_OUTER_CONTEXT;
-            $past.unshift(PAST::Op.new(
-                    :pasttype('bind'),
-                    PAST::Var.new( :name('$*NEW_OUTER_CONTEXT'),
-                                   :scope('contextual') ),
-                    PAST::Var.new(
-                        :scope('keyed'),
-                        PAST::Op.new( :pasttype('pirop'),
-                                      :pirop('getinterp P') ),
-                        PAST::Val.new( :value('context') ) ) ));
-        }
-
+        self.add_context_extraction_hook($past);
         self.install_outer_lexicals($past);
+        self.set_new_symtable($past.symtable);
 
-        my %symtab := $past.symtable;
-        # note that the grammar actions may already have picked a symtable
-        try { $*NEW_OUTER_SYMTABLE := %symtab
-                  unless pir::defined($*NEW_OUTER_SYMTABLE); };
+        $past;
+    }
 
+    method post($past, *%adverbs) {
         my $SUPER := P6metaclass.get_parrotclass(PCT::HLLCompiler);
-        $SUPER.find_method('post')(self, $past, |%adverbs);
+        $SUPER.find_method('post')(self, self.wrap_past($past), |%adverbs);
     }
 
     method eval($code, *@args, *%adverbs) {
