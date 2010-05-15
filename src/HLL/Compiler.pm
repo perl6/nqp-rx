@@ -243,7 +243,13 @@ class HLL::Compiler is PCT::HLLCompiler {
             }
 
             pir::trace(%adverbs<trace>) if %adverbs<trace>;
-            $output := $output[0]();
+            {
+                $output := $output[0](|@args);
+                CONTROL {
+                    pir::die("Uncaught control exception " ~ $!<type> ~
+                        " in eval");
+                }
+            }
             pir::trace(0) if %adverbs<trace>;
         }
 
