@@ -93,7 +93,7 @@ method statement($/, $key?) {
         my $ml := $<statement_mod_loop>[0];
         $past := $<EXPR>.ast;
         if $mc {
-            $past := PAST::Op.new($mc<cond>.ast, $past, :pasttype(~$mc<sym>), :node($/) );
+            $past := PAST::Op.new($mc.ast, $past, :pasttype(~$mc<sym>), :node($/) );
         }
         if $ml {
             if ~$ml<sym> eq 'for' {
@@ -305,7 +305,9 @@ method statement_mod_cond:sym<if>($/)     { make $<cond>.ast; }
 method statement_mod_cond:sym<unless>($/) { make $<cond>.ast; }
 method statement_mod_cond:sym<when>($/)   {
     $<sym> := "if";
-    make $<cond>.ast;
+    make PAST::Op.new( :pasttype<callmethod>, :name<ACCEPTS>, :node($/),
+        PAST::Var.new(:name<$_>, :scope<lexical>),
+        $<cond>.ast );
 }
 
 method statement_mod_loop:sym<while>($/)  { make $<cond>.ast; }
