@@ -257,6 +257,14 @@ sub push_block_handler($/, $block) {
     );
 }
 
+method statement_control:sym<given>($/) {
+    make PAST::Stmts.new();
+}
+
+method statement_control:sym<when>($/) {
+    make PAST::Stmts.new();
+}
+
 method statement_prefix:sym<INIT>($/) {
     @BLOCK[0].loadinit.push($<blorst>.ast);
     make PAST::Stmts.new(:node($/));
@@ -295,6 +303,10 @@ method blorst($/) {
 
 method statement_mod_cond:sym<if>($/)     { make $<cond>.ast; }
 method statement_mod_cond:sym<unless>($/) { make $<cond>.ast; }
+method statement_mod_cond:sym<when>($/)   {
+    $<sym> := "if";
+    make $<cond>.ast;
+}
 
 method statement_mod_loop:sym<while>($/)  { make $<cond>.ast; }
 method statement_mod_loop:sym<until>($/)  { make $<cond>.ast; }

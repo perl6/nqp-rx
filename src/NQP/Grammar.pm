@@ -195,6 +195,16 @@ token statement_control:sym<CONTROL> {
     <block>
 }
 
+token statement_control:sym<given> {
+    <sym> \s :s
+    <xblock>
+}
+
+token statement_control:sym<when> {
+    <sym> \s :s
+    <xblock>
+}
+
 proto token statement_prefix { <...> }
 token statement_prefix:sym<INIT> { <sym> <blorst> }
 
@@ -213,6 +223,7 @@ proto token statement_mod_cond { <...> }
 
 token statement_mod_cond:sym<if>     { <sym> :s <cond=.EXPR> }
 token statement_mod_cond:sym<unless> { <sym> :s <cond=.EXPR> }
+token statement_mod_cond:sym<when>   { <sym> :s <cond=.EXPR> }
 
 proto token statement_mod_loop { <...> }
 
