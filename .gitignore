@@ -9,6 +9,7 @@ HLL.pbc
 P6Regex
 P6Regex.pbc
 nqp
+!nqp/
 nqp.pbc
 nqp-setting.pbc
 src/gen/*.pir
