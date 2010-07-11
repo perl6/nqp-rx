@@ -1,6 +1,6 @@
 #! nqp
 
-say('1..10');
+say('1..11');
 
 given 42 {
     say('ok 1 - code inside given');
@@ -48,3 +48,8 @@ while 1 {
     print('not ');
 }
 say('ok 10 - matching when breaks loops');
+
+given 2 + 2 -> $x {
+    print('not ') if $x != 4;
+    say('ok 11 - pblock argument gets set');
+}
