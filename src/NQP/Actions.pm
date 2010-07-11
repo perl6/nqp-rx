@@ -258,11 +258,34 @@ sub push_block_handler($/, $block) {
 }
 
 method statement_control:sym<given>($/) {
-    make PAST::Stmts.new();
+    my $past := $<xblock>.ast;
+    my $block := $past[1];
+    my $expr := $past[0];
+
+    unless $block.arity {
+        $block[0].push( PAST::Var.new( :name('$_'), :scope('parameter') ) );
+        $block.symbol('$_', :scope('lexical') );
+        $block.arity(1);
+    }
+
+    $past.pasttype('repeat_while');
+    $past[0] := PAST::Val.new(:value(0));
+    $past[1] := PAST::Op.new( :pasttype('call'), $block, $expr );
+
+    make $past;
 }
 
 method statement_control:sym<when>($/) {
-    make PAST::Stmts.new();
+    my $past := xblock_immediate( $<xblock>.ast );
+    my $block := $past[1];
+    my $expr := $past[0];
+
+    $past[0] := PAST::Op.new( :pasttype<callmethod>, :name<ACCEPTS>, :node($/),
+        $expr,
+        PAST::Var.new(:name<$_>, :scope<lexical>) );
+    $block.push( control( $/, 'CONTROL_LOOP_LAST' ) );
+
+    make $past;
 }
 
 method statement_prefix:sym<INIT>($/) {
@@ -306,8 +329,8 @@ method statement_mod_cond:sym<unless>($/) { make $<cond>.ast; }
 method statement_mod_cond:sym<when>($/)   {
     $<sym> := "if";
     make PAST::Op.new( :pasttype<callmethod>, :name<ACCEPTS>, :node($/),
-        PAST::Var.new(:name<$_>, :scope<lexical>),
-        $<cond>.ast );
+        $<cond>.ast,
+        PAST::Var.new(:name<$_>, :scope<lexical>) );
 }
 
 method statement_mod_loop:sym<while>($/)  { make $<cond>.ast; }
