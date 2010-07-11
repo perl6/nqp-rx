@@ -1,6 +1,6 @@
 #! nqp
 
-say('1..8');
+say('1..10');
 
 given 42 {
     say('ok 1 - code inside given');
@@ -35,4 +35,16 @@ given Foo.new {
     }
     print('not ');
 }
-print('ok 8 - code after default not run');
+say('ok 8 - code after default not run');
+
+while 1 {
+    default { }
+    print('not ');
+}
+say('ok 9 - default breaks loops');
+
+while 1 {
+    when Foo { }
+    print('not ');
+}
+say('ok 10 - matching when breaks loops');
