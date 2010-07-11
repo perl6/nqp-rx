@@ -205,6 +205,10 @@ token statement_control:sym<when> {
     <xblock>
 }
 
+token statement_control:sym<default> {
+    <sym> \s :s <block>
+}
+
 proto token statement_prefix { <...> }
 token statement_prefix:sym<INIT> { <sym> <blorst> }
 

@@ -1,6 +1,6 @@
 #! nqp
 
-say('1..6');
+say('1..8');
 
 given 42 {
     say('ok 1 - code inside given');
@@ -25,3 +25,14 @@ given Foo.new {
     print('not ');
 }
 say('ok 6 - code after match not run');
+
+given Foo.new {
+    when Bar {
+        say('# Matched Bar?');
+    }
+    default {
+        say('ok 7 - default matches');
+    }
+    print('not ');
+}
+print('ok 8 - code after default not run');

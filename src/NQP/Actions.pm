@@ -288,6 +288,13 @@ method statement_control:sym<when>($/) {
     make $past;
 }
 
+method statement_control:sym<default>($/) {
+    my $past := block_immediate( $<block>.ast );
+    $past.push( control( $/, 'CONTROL_LOOP_LAST' ) );
+
+    make $past;
+}
+
 method statement_prefix:sym<INIT>($/) {
     @BLOCK[0].loadinit.push($<blorst>.ast);
     make PAST::Stmts.new(:node($/));
