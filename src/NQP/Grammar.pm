@@ -232,6 +232,7 @@ token term:sym<multi_declarator>   { <?before 'multi'|'proto'|'only'> <multi_dec
 token term:sym<regex_declarator>   { <regex_declarator> }
 token term:sym<statement_prefix>   { <statement_prefix> }
 token term:sym<lambda>             { <?lambda> <pblock> }
+token term:sym<...>                { <sym> <args>? }
 
 token fatarrow {
     <key=.identifier> \h* '=>' <.ws> <val=.EXPR('i=')>

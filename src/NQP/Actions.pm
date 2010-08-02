@@ -311,6 +311,10 @@ method term:sym<regex_declarator>($/)   { make $<regex_declarator>.ast; }
 method term:sym<statement_prefix>($/)   { make $<statement_prefix>.ast; }
 method term:sym<lambda>($/)             { make $<pblock>.ast; }
 
+method term:sym<...>($/) {
+    make PAST::Op.new( :pirop('die'), 'Stub code executed', :node($/) );
+}
+
 method fatarrow($/) {
     my $past := $<val>.ast;
     $past.named( $<key>.Str );
