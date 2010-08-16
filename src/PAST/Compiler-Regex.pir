@@ -739,8 +739,8 @@ second child of this node.
     ops.'push_pirop'('sub', '$I11', pos, off)
     if ignorecase goto literal_ignorecase
     if litlen == "1" goto literal_1
-    ops.'push_pirop'('substr', '$S10', tgt, '$I11', litlen)
-    ops.'push_pirop'('ne', '$S10', lpost, fail)
+    ops.'push_pirop'('cmp_str_at', '$I11', tgt, lpost, '$I11', litlen)
+    ops.'push_pirop'('ne', '$I11', 0, fail)
     goto literal_pass
   literal_1:
     $S0 = lpast
