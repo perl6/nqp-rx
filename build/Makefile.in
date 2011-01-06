@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2009, The Perl Foundation.
+# Copyright (C) 2006-2010, The Perl Foundation.
 # $Id$
 
 PARROT_ARGS      =
@@ -11,6 +11,9 @@ PARROT_LIB_DIR     = @libdir@$(PARROT_VERSION)
 PARROT_SRC_DIR     = @srcdir@$(PARROT_VERSION)
 PARROT_LIBRARY_DIR = $(PARROT_LIB_DIR)/library
 HAS_ICU            = @has_icu@
+
+HARNESS_WITH_FUDGE = $(PERL) t/harness --fudge --keep-exit-code --icu=$(HAS_ICU)
+HARNESS_WITH_FUDGE_JOBS = $(HARNESS_WITH_FUDGE) --jobs
 
 CC            = @cc@
 CFLAGS        = @ccflags@ @cc_shared@ @cc_debug@ @ccwarn@ @cc_hasjit@ @gc_flag@
@@ -27,6 +30,7 @@ MV            = @mv@
 RM_F          = @rm_f@
 MKPATH        = $(PERL) -MExtUtils::Command -e mkpath
 CHMOD         = $(PERL) -MExtUtils::Command -e chmod
+
 
 # locations of parrot resources
 PARROT           = $(PARROT_BIN_DIR)/parrot$(EXE)
@@ -290,6 +294,13 @@ setting-test: $(NQP_EXE) $(SETTING_PBC)
 
 setting-test-loud: $(NQP_EXE) $(SETTING_PBC)
 	prove -r -v --exec ./$(NQP_EXE) t/setting
+
+nqp-rx_test_run.tar.gz: testable t/spectest.data
+	$(HARNESS_WITH_FUDGE_JOBS) --tests-from-file=t/spectest.data --archive nqp-rx_test_run.tar.gz --parrot_revision 1
+
+smoke: nqp-rx_test_run.tar.gz
+	#./perl6 -e "run qqx[git log -1 --pretty=format:%H].fmt(qq[curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=%s -F report_file=@rakudo_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/5])"
+	./perl6 -e "run qqx[git log -1 --pretty=format:%H].fmt(qq[curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=%s -F report_file=@rakudo_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/5])"
 
 ## cleaning
 
