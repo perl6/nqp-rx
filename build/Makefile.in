@@ -11,6 +11,7 @@ PARROT_LIB_DIR     = @libdir@$(PARROT_VERSION)
 PARROT_SRC_DIR     = @srcdir@$(PARROT_VERSION)
 PARROT_LIBRARY_DIR = $(PARROT_LIB_DIR)/library
 HAS_ICU            = @has_icu@
+SHA1               = git log -1 --pretty=format:%H
 
 HARNESS_WITH_FUDGE = $(PERL) t/harness --fudge --keep-exit-code --icu=$(HAS_ICU)
 HARNESS_WITH_FUDGE_JOBS = $(HARNESS_WITH_FUDGE) --jobs
@@ -299,8 +300,7 @@ nqp-rx_test_run.tar.gz: testable t/spectest.data
 	$(HARNESS_WITH_FUDGE_JOBS) --tests-from-file=t/spectest.data --archive nqp-rx_test_run.tar.gz --parrot_revision 1
 
 smoke: nqp-rx_test_run.tar.gz
-	#./perl6 -e "run qqx[git log -1 --pretty=format:%H].fmt(qq[curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=%s -F report_file=@rakudo_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/5])"
-	./perl6 -e "run qqx[git log -1 --pretty=format:%H].fmt(qq[curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=%s -F report_file=@rakudo_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/5])"
+	curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=$(SHA1) -F report_file=@nqp-rx_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/8])"
 
 ## cleaning
 
