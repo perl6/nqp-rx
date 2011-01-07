@@ -15,3 +15,4 @@ src/gen/*.pir
 src/gen/*.nqp
 src/stage1
 src/stage2
+nqp-rx_test_run.tar.gz

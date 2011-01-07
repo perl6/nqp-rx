@@ -1,0 +1,123 @@
+#! perl
+
+# note: Due to a limitation in Getopt::Long options that should be passed
+# through to fudgeall have to come after all other options
+
+use strict;
+use warnings;
+
+use FindBin;
+use File::Spec;
+use Getopt::Long qw(:config pass_through);
+use Pod::Usage;
+
+my $slash = $^O eq 'MSWin32' ? '\\' : '/';
+$ENV{'HARNESS_PERL'} = ".${slash}perl6";
+use Test::Harness;
+$Test::Harness::switches = '';
+
+GetOptions(
+    'verbosity=i'       => \$Test::Harness::verbose,
+    'jobs:1'            => \my $jobs,
+    'icu:1'             => \my $do_icu,
+    'long:1'            => \my $do_long,
+    'stress:1'          => \my $do_stress,
+    'archive=s'         => \my $archive,
+    'parrot_revision=s' => \my $parrot_revision,
+    'help|h' => sub { pod2usage(1); },
+) or pod2usage(2);
+
+$do_long = 1 unless defined $do_long;
+$do_stress = 0 unless defined $do_stress;
+
+my @pass_through_options = grep m/^--?[^-]/, @ARGV;
+
+my @tfiles = map { all_in($_) } qw(t/nqp);
+
+
+my $tap_harness_class = 'TAP::Harness';
+$tap_harness_class .= '::Archive' if $archive;
+
+my $extra_properties;
+if ($archive) {
+    $extra_properties->{'Parrot Revision'} = $parrot_revision
+    if $parrot_revision;
+    $extra_properties->{'Submitter'} = $ENV{SMOLDER_SUBMITTER}
+    if $ENV{SMOLDER_SUBMITTER};
+}
+
+if (eval "require $tap_harness_class;") {
+    my %harness_options = (
+        exec        => ['./perl6'],
+        verbosity   => 0+$Test::Harness::verbose,
+        jobs        => $ENV{TEST_JOBS} || $jobs || 1,
+        ignore_exit => 1,
+        merge       => 1,
+        $archive ? ( archive => $archive ) : (),
+        $extra_properties ? ( extra_properties => $extra_properties ) : (),
+    );
+    $tap_harness_class->new( \%harness_options )->runtests(@tfiles);
+}
+else {
+    runtests(@tfiles);
+}
+
+# adapted to return only files ending in '.t'
+sub all_in {
+    my $start = shift;
+
+    return $start unless -d $start;
+
+    my @skip = ( File::Spec->updir, File::Spec->curdir, qw( .svn CVS .git ) );
+    my %skip = map {($_,1)} @skip;
+
+    my @hits = ();
+
+    if ( opendir( my $dh, $start ) ) {
+        my @files = sort readdir $dh;
+        closedir $dh or die $!;
+        for my $file ( @files ) {
+            next if $skip{$file};
+
+            my $currfile = File::Spec->catfile( $start, $file );
+            if ( -d $currfile ) {
+                push( @hits, all_in( $currfile ) );
+            } else {
+                push( @hits, $currfile ) if $currfile =~ /\.t$/;
+            }
+        }
+    } else {
+        warn "$start: $!\n";
+    }
+
+    return @hits;
+}
+
+sub fudge {
+    my $impl = 'rakudo';
+    my $cmd  = join ' ', $^X, 't/spec/fudgeall',
+                         @pass_through_options, $impl, @_;
+    return split ' ', `$cmd`;
+}
+
+=head1 NAME
+
+t/harness - run the harness tests for Rakudo.
+
+=head1 SYNOPSIS
+
+t/harness [options] [files]
+
+Options:
+
+    --help / -h - display the help message.
+    --tests-from-file=[filename] - get the tests from the filename.
+    --fudge - fudge (?)
+    --verbosity=[level] - set the verbosity level.
+    --jobs - number of jobs.
+    --icu - do icu.
+    --long - do long.
+    --stress - perform the stress tests/
+    --archive=[archive] - write to an archive.
+    --parrot_revision=[rev] - test with Parrot revision.
+
