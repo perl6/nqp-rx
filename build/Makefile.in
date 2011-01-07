@@ -12,8 +12,9 @@ PARROT_SRC_DIR     = @srcdir@$(PARROT_VERSION)
 PARROT_LIBRARY_DIR = $(PARROT_LIB_DIR)/library
 HAS_ICU            = @has_icu@
 SHA1               = git log -1 --pretty=format:%H
+PERL               = @perl@
 
-HARNESS_WITH_FUDGE = $(PERL) t/harness --fudge --keep-exit-code --icu=$(HAS_ICU)
+HARNESS_WITH_FUDGE = $(PERL) t/harness -keep-exit-code --icu=$(HAS_ICU)
 HARNESS_WITH_FUDGE_JOBS = $(HARNESS_WITH_FUDGE) --jobs
 
 CC            = @cc@
@@ -296,8 +297,8 @@ setting-test: $(NQP_EXE) $(SETTING_PBC)
 setting-test-loud: $(NQP_EXE) $(SETTING_PBC)
 	prove -r -v --exec ./$(NQP_EXE) t/setting
 
-nqp-rx_test_run.tar.gz: testable t/spectest.data
-	$(HARNESS_WITH_FUDGE_JOBS) --tests-from-file=t/spectest.data --archive nqp-rx_test_run.tar.gz --parrot_revision 1
+nqp-rx_test_run.tar.gz:
+	$(HARNESS_WITH_FUDGE_JOBS) 1 --archive nqp-rx_test_run.tar.gz --parrot_revision 1
 
 smoke: nqp-rx_test_run.tar.gz
 	curl -F architecture=@cpuarch@ -F platform=@osname@ -F revision=$(SHA1) -F report_file=@nqp-rx_test_run.tar.gz -F username=parrot-autobot -F password=qa_rocks http://smolder.parrot.org/app/projects/process_add_report/8])"
