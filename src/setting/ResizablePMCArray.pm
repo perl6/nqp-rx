@@ -16,7 +16,7 @@ module ResizablePMCArray {
     =end item
 
     method delete($pos) {
-        pir::delete__vQi(self, $pos);
+        pir::delete(self, $pos);
     }
 
     =begin item exists
@@ -24,7 +24,7 @@ module ResizablePMCArray {
     =end item
 
     method exists($pos) {
-        pir::exists__IQi(self, $pos);
+        pir::exists(self, $pos);
     }
 
     =begin item join
