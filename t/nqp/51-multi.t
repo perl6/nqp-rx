@@ -1,6 +1,6 @@
 #! nqp
 
-say("1..7");
+say("1..9");
 
 our multi sub foo(Float $f) {
     say("ok 1");
@@ -26,11 +26,22 @@ class Foo {
     our multi method bar($f) {
         say($f);
     };
+
+    multi method baz(Integer $i) {
+        say("ok 6");
+    }
+
+    multi method baz($i) {
+        say($i);
+    };
+
 };
 
 my $f := Foo.new;
 $f.bar(43.5 - 0.5);
 $f.bar("ok 5");
+$f.baz(42);
+$f.baz("ok 7");
 
 
 class Bar {
@@ -39,11 +50,11 @@ class Bar {
     }
 
     our multi method foo(Float $x, :$opt?) {
-        say("ok 6");
+        say("ok 8");
     }
 }
 
 my $b := Bar.new;
 $b.foo(43.5 - 0.5);
-$b.foo("ok 7");
+$b.foo("ok 9");
 
