@@ -31,7 +31,7 @@ module ResizablePMCArray {
     Return all elements joined by $sep.
     =end item
 
-    method join ($separator) {
+    method join ($separator = '') {
         pir::join($separator, self);
     }
 
