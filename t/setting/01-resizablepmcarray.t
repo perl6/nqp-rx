@@ -5,7 +5,7 @@ pir::load_bytecode('nqp-setting.pbc');
 my @array := <0 1 2>;
 my @reversed := @array.reverse();
 
-plan(11);
+plan(13);
 
 ok( @reversed[0] == 2, 'First element correct');
 ok( @reversed[1] == 1, 'Second element correct');
@@ -25,5 +25,10 @@ ok( !@test.exists(3), 'Item does not exist at @test[3]');
 ok( @test[1] eq 'cherry', '@test[1] was deleted');
 ok( +@test == 2, '@test[1] has two items');
 ok( !@test.exists(2), '@test[2] no longer exists');
+
+@test := <1 2 3>;
+my @res := @test.map(sub($a) { $a~$a; });
+ok( +@res == 3, 'Map produced same number of elements');
+ok( @res.join() eq '112233', 'Map produced correct elements');
 
 # vim: ft=perl6
