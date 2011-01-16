@@ -27,7 +27,7 @@ ok( +@test == 2, '@test[1] has two items');
 ok( !@test.exists(2), '@test[2] no longer exists');
 
 @test := <1 2 3>;
-my @res := @test.map(sub($a) { $a~$a; });
+my @res := @test.map(-> $a { $a~$a; });
 ok( +@res == 3, 'Map produced same number of elements');
 ok( @res.join() eq '112233', 'Map produced correct elements');
 
