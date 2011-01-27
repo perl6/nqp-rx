@@ -5,7 +5,7 @@ pir::load_bytecode('nqp-setting.pbc');
 my @array := <0 1 2>;
 my @reversed := @array.reverse();
 
-plan(13);
+plan(16);
 
 ok( @reversed[0] == 2, 'First element correct');
 ok( @reversed[1] == 1, 'Second element correct');
@@ -30,5 +30,10 @@ ok( !@test.exists(2), '@test[2] no longer exists');
 my @res := @test.map(-> $a { $a~$a; });
 ok( +@res == 3, 'Map produced same number of elements');
 ok( @res.join() eq '112233', 'Map produced correct elements');
+
+@res := @test.grep(-> $a { $a % 2 });
+ok( +@res == 2, 'Grep produced correct number of elements');
+ok( @res[0] == 1, 'Grep produced correct elements');
+ok( @res[1] == 3, 'Grep produced correct elements');
 
 # vim: ft=perl6
