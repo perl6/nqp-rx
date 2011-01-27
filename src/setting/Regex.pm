@@ -60,7 +60,7 @@ our sub subst ($text, $regex, $repl, :$global?) {
 Splits C<$text> on occurences of C<$regex>
 =end item
 
-our sub split ($regex, $text) {
+our multi sub split (Regex::Regex $regex, $text) {
     my $pos := 0;
     my @result;
     my $looking := 1;
@@ -85,5 +85,12 @@ our sub split ($regex, $text) {
     return @result;
 }
 
+# Use parrot's split for plain strings.
+our multi sub split($string, $text) {
+    # op split produces RSA. So, convert it to RPA.
+    my @res;
+    @res.push($_) for pir::split($string, $text);
+    @res;
+}
 
 # vim: ft=perl6
