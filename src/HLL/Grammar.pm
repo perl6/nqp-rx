@@ -119,7 +119,7 @@ grammar HLL::Grammar;
         | '[' <charnames> ']' 
         | \d+ [ _ \d+]*
         | <[ ?..Z ]>
-        | <.panic: 'Unrecognized \\c character'>
+        | { $/.CURSOR.panic('Unrecognized \\c character') }
         ]
     }
 
