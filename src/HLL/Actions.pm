@@ -1,5 +1,15 @@
 class HLL::Actions;
 
+has $!has_icu := 1;
+
+INIT {
+    # With nqp-rx only this hack, with nqp-p6 pir::const::IGLOBALS_CONFIG_HASH
+    # TODO: sync with parrot/include/iglobals.pasm
+    my $IGLOBALS_CONFIG_HASH := 8;
+    my %config := pir::getinterp__P()[$IGLOBALS_CONFIG_HASH];
+    $!has_icu := %config<has_icu>;
+}
+
 our sub string_to_int($src, $base) {
     Q:PIR {
         .local pmc src
@@ -212,8 +222,14 @@ method charname($/) {
     my $codepoint := $<integer>
                      ?? $<integer>.ast
                      !! pir::find_codepoint__Is( ~$/ );
-    $/.CURSOR.panic("Unrecognized character name $/") if $codepoint < 0;
-    make pir::chr($codepoint);
+    if ($codepoint < 0) {
+        $!has_icu
+        ?? $/.CURSOR.panic("Unrecognized character name $/")
+        !! make pir::chr(~$/);
+    }
+    else {
+        make pir::chr($codepoint);
+    }
 }
 
 method charnames($/) {
