@@ -1,6 +1,6 @@
 =head1 DEPRECATION NOTICE
 
-These days, NQP-rx is unmaintained; ative development happens in
+These days, NQP-rx is unmaintained; active development happens in
 nqp at L<https://github.com/perl6/nqp/>. This repository only serves
 as a historical document, and/or an implicit lesson in compiler design.
 
