@@ -1,3 +1,9 @@
+=head1 DEPRECATION NOTICE
+
+These days, NQP-rx is unmaintained; ative development happens in
+nqp at L<https://github.com/perl6/nqp/>. This repository only serves
+as a historical document, and/or an implicit lesson in compiler design.
+
 =head1 NQP-rx - Not Quite Perl (6)
 
 NQP-rx is Copyright (C) 2009 by The Perl Foundation.  See F<LICENSE>
